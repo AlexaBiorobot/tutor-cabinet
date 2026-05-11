@@ -21,6 +21,28 @@ create table profiles (
   created_at timestamptz not null default now()
 );
 
+create function handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into profiles (id, full_name, email, role)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    new.email,
+    coalesce((new.raw_user_meta_data->>'role')::app_role, 'tutor')
+  );
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function handle_new_user();
+
 create table training_paths (
   id uuid primary key default gen_random_uuid(),
   title text not null,

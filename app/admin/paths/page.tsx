@@ -1,11 +1,17 @@
 import { BookOpenCheck, Plus, Route, UserPlus } from "lucide-react";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { modules, pathAssignments, trainingPaths, tutors, webinars } from "@/lib/mock-data";
+import { getSessionProfile } from "@/lib/supabase/data";
 
-export default function AdminPathsPage() {
+export default async function AdminPathsPage() {
+  const { user, profile } = await getSessionProfile();
+  if (!user) redirect("/login");
+  if (profile?.role !== "admin") redirect("/tutor");
+
   return (
     <AppShell title="Training paths and content" eyebrow="Curriculum builder">
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">

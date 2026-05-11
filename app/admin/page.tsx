@@ -1,25 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BarChart3, CalendarCheck, Plus, UserPlus } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ProgressRing } from "@/components/progress-ring";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  moduleProgress,
-  modules,
-  pathAssignments,
-  trainingPaths,
-  tutors,
-  webinarRegistrations
-} from "@/lib/mock-data";
 import { calculateReadiness } from "@/lib/readiness";
+import { getAdminDashboardData, getSessionProfile } from "@/lib/supabase/data";
 
-export default function AdminDashboard() {
-  const rows = pathAssignments.map((assignment) => {
-    const tutor = tutors.find((item) => item.id === assignment.tutorId);
-    const path = trainingPaths.find((item) => item.id === assignment.pathId);
-    if (!tutor || !path) return null;
+export default async function AdminDashboard() {
+  const { user, profile } = await getSessionProfile();
+  if (!user) redirect("/login");
+  if (profile?.role !== "admin") redirect("/tutor");
+
+  const { rows: assignmentRows, modules, moduleProgress, webinarRegistrations } = await getAdminDashboardData();
+  const rows = assignmentRows.map(({ tutor, path }) => {
+    if (!path) return null;
     const readiness = calculateReadiness({
       path,
       modules,
@@ -32,6 +29,8 @@ export default function AdminDashboard() {
 
   const readyCount = rows.filter((row) => row?.readiness.status === "ready").length;
   const revisionCount = rows.filter((row) => row?.readiness.status === "needs_revision").length;
+  const averageCompletion =
+    rows.length === 0 ? 0 : Math.round(rows.reduce((sum, row) => sum + (row?.readiness.percent ?? 0), 0) / rows.length);
 
   return (
     <AppShell title="Admin readiness overview" eyebrow="Admin workspace">
@@ -140,9 +139,7 @@ export default function AdminDashboard() {
               <CardDescription>Across active assignments</CardDescription>
             </CardHeader>
             <CardContent>
-              <ProgressRing
-                value={Math.round(rows.reduce((sum, row) => sum + (row?.readiness.percent ?? 0), 0) / rows.length)}
-              />
+              <ProgressRing value={averageCompletion} />
             </CardContent>
           </Card>
         </div>

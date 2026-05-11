@@ -1,31 +1,24 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { CalendarDays, CheckCircle2, ExternalLink, LockKeyhole, PlayCircle } from "lucide-react";
+import { registerForWebinar } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { ProgressRing } from "@/components/progress-ring";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  currentTutorId,
-  moduleProgress,
-  modules,
-  pathAssignments,
-  quizzes,
-  trainingPaths,
-  webinars,
-  webinarRegistrations
-} from "@/lib/mock-data";
 import { calculateReadiness } from "@/lib/readiness";
+import { getSessionProfile, getTutorDashboardData } from "@/lib/supabase/data";
 import { formatDateTime, formatDuration } from "@/lib/utils";
 
-export default function TutorDashboard() {
-  const assignedPaths = pathAssignments
-    .filter((assignment) => assignment.tutorId === currentTutorId)
-    .map((assignment) => trainingPaths.find((path) => path.id === assignment.pathId))
-    .filter(Boolean);
+export default async function TutorDashboard() {
+  const { user } = await getSessionProfile();
+  if (!user) redirect("/login");
 
-  const tutorModuleProgress = moduleProgress.filter((item) => item.tutorId === currentTutorId);
-  const tutorWebinars = webinarRegistrations.filter((item) => item.tutorId === currentTutorId);
+  const { paths, modules, moduleProgress, webinars, webinarRegistrations } = await getTutorDashboardData(user.id);
+  const assignedPaths = paths;
+  const tutorModuleProgress = moduleProgress;
+  const tutorWebinars = webinarRegistrations;
   const upcomingWebinars = webinars.map((webinar) => ({
     webinar,
     registration: tutorWebinars.find((item) => item.webinarId === webinar.id)
@@ -68,7 +61,6 @@ export default function TutorDashboard() {
                         const webinar = webinars.find((item) => item.id === step.webinarId);
                         const progress = tutorModuleProgress.find((item) => item.moduleId === step.moduleId);
                         const registration = tutorWebinars.find((item) => item.webinarId === step.webinarId);
-                        const quiz = quizzes.find((item) => item.moduleId === module?.id);
                         const status = progress?.status ?? registration?.status ?? "not_started";
 
                         return (
@@ -96,9 +88,9 @@ export default function TutorDashboard() {
                                 <p className="mt-1 text-sm text-muted-foreground">
                                   {module?.summary ?? webinar?.description}
                                 </p>
-                                {quiz ? (
+                                {module?.quizId ? (
                                   <p className="mt-1 text-xs text-muted-foreground">
-                                    Quiz required: {quiz.title}, pass at {quiz.passingScore}%
+                                    Quiz required for completion
                                   </p>
                                 ) : null}
                               </div>
@@ -118,7 +110,10 @@ export default function TutorDashboard() {
                                   </a>
                                 </Button>
                               ) : (
-                                <Button size="sm" variant="outline">Register</Button>
+                                <form action={registerForWebinar}>
+                                  <input type="hidden" name="webinarId" value={webinar?.id} />
+                                  <Button size="sm" variant="outline">Register</Button>
+                                </form>
                               )}
                             </div>
                           </div>
@@ -159,7 +154,10 @@ export default function TutorDashboard() {
                         </a>
                       </Button>
                     ) : (
-                      <Button size="sm" variant="outline">Register</Button>
+                      <form action={registerForWebinar}>
+                        <input type="hidden" name="webinarId" value={webinar.id} />
+                        <Button size="sm" variant="outline">Register</Button>
+                      </form>
                     )}
                   </div>
                 </div>
