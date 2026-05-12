@@ -12,7 +12,15 @@ export async function signIn(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
 
-  redirect("/tutor");
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+
+  redirect(profile?.role === "admin" ? "/admin" : "/tutor");
 }
 
 export async function signOut() {
@@ -83,4 +91,82 @@ export async function createWebinar(formData: FormData) {
   });
 
   revalidatePath("/admin/webinars");
+}
+
+export async function createTrainingPath(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+  if (!title) return;
+
+  await supabase.from("training_paths").insert({
+    title,
+    description,
+    created_by: user.id
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/paths");
+}
+
+export async function assignTrainingPath(formData: FormData) {
+  const tutorId = String(formData.get("tutorId") ?? "");
+  const pathId = String(formData.get("pathId") ?? "");
+  const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+  if (!tutorId || !pathId) return;
+
+  await supabase.from("path_assignments").upsert(
+    {
+      tutor_id: tutorId,
+      training_path_id: pathId,
+      assigned_by: user.id
+    },
+    { onConflict: "tutor_id,training_path_id" }
+  );
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/paths");
+}
+
+export async function addTrainingPathStep(formData: FormData) {
+  const pathId = String(formData.get("pathId") ?? "");
+  const stepTarget = String(formData.get("stepTarget") ?? "");
+  const required = formData.get("required") === "on";
+  const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+  if (!pathId || !stepTarget) return;
+
+  const [stepType, targetId] = stepTarget.split(":");
+  if ((stepType !== "module" && stepType !== "webinar") || !targetId) return;
+
+  const { count } = await supabase
+    .from("training_path_steps")
+    .select("id", { count: "exact", head: true })
+    .eq("training_path_id", pathId);
+
+  await supabase.from("training_path_steps").insert({
+    training_path_id: pathId,
+    step_type: stepType,
+    module_id: stepType === "module" ? targetId : null,
+    webinar_id: stepType === "webinar" ? targetId : null,
+    is_required: required,
+    position: (count ?? 0) + 1
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/paths");
 }
