@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarDays, CheckCircle2, ExternalLink, LockKeyhole, PlayCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, ExternalLink, PlayCircle } from "lucide-react";
 import { registerForWebinar } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { ProgressRing } from "@/components/progress-ring";
@@ -12,7 +11,7 @@ import { getSessionProfile, getTutorDashboardData } from "@/lib/supabase/data";
 import { formatDateTime, formatDuration } from "@/lib/utils";
 
 export default async function TutorDashboard() {
-  const { user } = await getSessionProfile();
+  const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
 
   const { paths, modules, moduleProgress, webinars, webinarRegistrations } = await getTutorDashboardData(user.id);
@@ -25,7 +24,12 @@ export default async function TutorDashboard() {
   }));
 
   return (
-    <AppShell title="Tutor training dashboard" eyebrow="Tutor workspace">
+    <AppShell
+      title="Tutor training dashboard"
+      eyebrow="Tutor workspace"
+      userName={profile?.full_name}
+      userRole={profile?.role}
+    >
       <section className="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
         <div className="grid gap-5">
           {assignedPaths.map((path) => {
@@ -167,16 +171,11 @@ export default async function TutorDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Access</CardTitle>
-              <CardDescription>Supabase auth will protect tutor and admin routes.</CardDescription>
+              <CardTitle>Readiness rules</CardTitle>
+              <CardDescription>Required webinars must be attended before readiness can move to ready.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button asChild variant="secondary" className="w-full">
-                <Link href="/login">
-                  <LockKeyhole className="h-4 w-4" />
-                  Login preview
-                </Link>
-              </Button>
+            <CardContent className="text-sm text-muted-foreground">
+              Quiz revision or a missed required webinar will keep the path blocked until an admin updates the status.
             </CardContent>
           </Card>
         </div>
