@@ -39,6 +39,27 @@ type DbModule = {
   quizzes?: { id: string }[];
 };
 
+type DbQuiz = {
+  id: string;
+  title: string;
+  passing_score: number;
+  quiz_questions?: DbQuizQuestion[];
+};
+
+type DbQuizQuestion = {
+  id: string;
+  prompt: string;
+  position: number;
+  quiz_options?: DbQuizOption[];
+};
+
+type DbQuizOption = {
+  id: string;
+  label: string;
+  is_correct?: boolean;
+  position: number;
+};
+
 type DbWebinar = {
   id: string;
   title: string;
@@ -138,7 +159,7 @@ export async function getTutorDashboardData(tutorId: string) {
 
 export async function getTutorModuleData(tutorId: string, moduleId: string) {
   const supabase = await createClient();
-  const [{ data: moduleRow }, { data: progressRow }] = await Promise.all([
+  const [{ data: moduleRow }, { data: progressRow }, { data: quizRows }] = await Promise.all([
     supabase
       .from("modules")
       .select("id, title, summary, body, estimated_minutes, video_url, image_url, resource_links, quizzes(id)")
@@ -149,11 +170,17 @@ export async function getTutorModuleData(tutorId: string, moduleId: string) {
       .select("tutor_id, module_id, status")
       .eq("tutor_id", tutorId)
       .eq("module_id", moduleId)
-      .maybeSingle()
+      .maybeSingle(),
+    supabase
+      .from("quizzes")
+      .select("id, title, passing_score, quiz_questions(id, prompt, position, quiz_options(id, label, position))")
+      .eq("module_id", moduleId)
+      .order("created_at", { ascending: true })
   ]);
 
   return {
     module: moduleRow ? mapModule(moduleRow as DbModule) : null,
+    quiz: ((quizRows ?? []) as DbQuiz[]).map(mapTutorQuiz)[0] ?? null,
     progress: progressRow
       ? {
           tutorId: progressRow.tutor_id,
@@ -300,6 +327,28 @@ function mapModule(row: DbModule): Module {
     imageUrl: row.image_url ?? undefined,
     resourceLinks: row.resource_links ?? [],
     quizId: row.quizzes?.[0]?.id
+  };
+}
+
+function mapTutorQuiz(row: DbQuiz) {
+  return {
+    id: row.id,
+    title: row.title,
+    passingScore: row.passing_score,
+    questions: (row.quiz_questions ?? [])
+      .map((question) => ({
+        id: question.id,
+        prompt: question.prompt,
+        position: question.position,
+        options: (question.quiz_options ?? [])
+          .map((option) => ({
+            id: option.id,
+            label: option.label,
+            position: option.position
+          }))
+          .sort((a, b) => a.position - b.position)
+      }))
+      .sort((a, b) => a.position - b.position)
   };
 }
 
