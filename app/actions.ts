@@ -72,6 +72,62 @@ export async function completeModule(formData: FormData) {
   redirect("/tutor");
 }
 
+export async function submitModuleQuiz(formData: FormData) {
+  const moduleId = String(formData.get("moduleId") ?? "");
+  const quizId = String(formData.get("quizId") ?? "");
+  const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+  if (!moduleId || !quizId) return;
+
+  const { data: quiz } = await supabase
+    .from("quizzes")
+    .select("id, passing_score, quiz_questions(id, quiz_options(id, is_correct))")
+    .eq("id", quizId)
+    .maybeSingle();
+
+  const questions = (quiz?.quiz_questions ?? []) as {
+    id: string;
+    quiz_options?: { id: string; is_correct: boolean }[];
+  }[];
+
+  const total = questions.length;
+  const correct = questions.filter((question) => {
+    const selectedOptionId = String(formData.get(`question_${question.id}`) ?? "");
+    return question.quiz_options?.some((option) => option.id === selectedOptionId && option.is_correct);
+  }).length;
+
+  const score = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const status = score >= Number(quiz?.passing_score ?? 80) ? "passed" : "needs_revision";
+
+  await supabase.from("quiz_attempts").insert({
+    tutor_id: user.id,
+    quiz_id: quizId,
+    score,
+    status,
+    answers: Object.fromEntries(
+      questions.map((question) => [question.id, String(formData.get(`question_${question.id}`) ?? "")])
+    )
+  });
+
+  await supabase.from("module_progress").upsert(
+    {
+      tutor_id: user.id,
+      module_id: moduleId,
+      status,
+      completed_at: status === "passed" ? new Date().toISOString() : null
+    },
+    { onConflict: "tutor_id,module_id" }
+  );
+
+  revalidatePath("/tutor");
+  revalidatePath(`/tutor/modules/${moduleId}`);
+  redirect(`/tutor/modules/${moduleId}`);
+}
+
 export async function markAttendance(formData: FormData) {
   const registrationId = String(formData.get("registrationId") ?? "");
   const status = String(formData.get("status") ?? "");
