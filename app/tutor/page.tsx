@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { CalendarDays, CheckCircle2, ExternalLink, PlayCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, ExternalLink, FileText, PlayCircle, Video } from "lucide-react";
 import { registerForWebinar } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { ProgressRing } from "@/components/progress-ring";
@@ -96,6 +96,39 @@ export default async function TutorDashboard() {
                                   <p className="mt-1 text-xs text-muted-foreground">
                                     Quiz required for completion
                                   </p>
+                                ) : null}
+                                {module ? (
+                                  <div className="mt-3 grid gap-3">
+                                    {module.imageUrl ? (
+                                      <img
+                                        src={module.imageUrl}
+                                        alt=""
+                                        className="max-h-44 w-full rounded-md border object-cover md:max-w-xl"
+                                      />
+                                    ) : null}
+                                    {module.videoUrl ? (
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <Button asChild size="sm" variant="outline">
+                                          <a href={module.videoUrl} target="_blank" rel="noreferrer">
+                                            <Video className="h-4 w-4" />
+                                            Open video
+                                          </a>
+                                        </Button>
+                                      </div>
+                                    ) : null}
+                                    {module.resourceLinks.length > 0 ? (
+                                      <div className="flex flex-wrap gap-2">
+                                        {module.resourceLinks.map((link, index) => (
+                                          <Button key={link} asChild size="sm" variant="secondary">
+                                            <a href={link} target="_blank" rel="noreferrer">
+                                              <FileText className="h-4 w-4" />
+                                              Material {index + 1}
+                                            </a>
+                                          </Button>
+                                        ))}
+                                      </div>
+                                    ) : null}
+                                  </div>
                                 ) : null}
                               </div>
                             </div>
