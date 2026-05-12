@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { CheckCircle2, ExternalLink, FileText, Video } from "lucide-react";
-import { completeModule } from "@/app/actions";
+import { CheckCircle2, ExternalLink, FileText, Send, Video } from "lucide-react";
+import { completeModule, submitModuleQuiz } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ export default async function TutorModulePage({ params }: { params: Promise<{ mo
   const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
 
-  const { module, progress } = await getTutorModuleData(user.id, moduleId);
+  const { module, progress, quiz } = await getTutorModuleData(user.id, moduleId);
   if (!module) redirect("/tutor");
 
   const status = progress?.status ?? "not_started";
@@ -52,6 +52,35 @@ export default async function TutorModulePage({ params }: { params: Promise<{ mo
                 </a>
               </Button>
             ) : null}
+            {quiz ? (
+              <div className="border-t pt-5">
+                <h2 className="text-lg font-semibold">{quiz.title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Passing score: {quiz.passingScore}%</p>
+                <form action={submitModuleQuiz} className="mt-4 grid gap-4">
+                  <input type="hidden" name="moduleId" value={module.id} />
+                  <input type="hidden" name="quizId" value={quiz.id} />
+                  {quiz.questions.map((question, questionIndex) => (
+                    <fieldset key={question.id} className="rounded-md border bg-background p-4">
+                      <legend className="px-1 text-sm font-semibold">
+                        {questionIndex + 1}. {question.prompt}
+                      </legend>
+                      <div className="mt-3 grid gap-2">
+                        {question.options.map((option) => (
+                          <label key={option.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+                            <input required type="radio" name={`question_${question.id}`} value={option.id} />
+                            {option.label}
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  ))}
+                  <Button type="submit" className="w-fit">
+                    <Send className="h-4 w-4" />
+                    Submit quiz
+                  </Button>
+                </form>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -67,6 +96,8 @@ export default async function TutorModulePage({ params }: { params: Promise<{ mo
                   <CheckCircle2 className="h-4 w-4" />
                   Complete
                 </div>
+              ) : quiz ? (
+                <p className="text-sm text-muted-foreground">Pass the quiz to complete this module.</p>
               ) : (
                 <form action={completeModule}>
                   <input type="hidden" name="moduleId" value={module.id} />
