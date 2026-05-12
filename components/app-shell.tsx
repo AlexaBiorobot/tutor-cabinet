@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpenCheck, CalendarDays, GraduationCap, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BookOpenCheck, CalendarDays, GraduationCap, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
 import { signOut } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 
@@ -15,13 +15,17 @@ export function AppShell({
   title,
   eyebrow,
   userName,
-  userRole
+  userRole,
+  backHref,
+  backLabel = "Back"
 }: {
   children: React.ReactNode;
   title: string;
   eyebrow: string;
   userName?: string;
   userRole?: string;
+  backHref?: string;
+  backLabel?: string;
 }) {
   return (
     <div className="min-h-screen">
@@ -60,6 +64,14 @@ export function AppShell({
       <main className="lg:pl-64">
         <header className="border-b bg-card">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-5 py-6">
+            {backHref ? (
+              <Button asChild variant="ghost" size="sm" className="w-fit px-0 text-muted-foreground hover:bg-transparent">
+                <Link href={backHref}>
+                  <ArrowLeft className="h-4 w-4" />
+                  {backLabel}
+                </Link>
+              </Button>
+            ) : null}
             <p className="text-sm font-medium text-primary">{eyebrow}</p>
             <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{title}</h1>
           </div>
