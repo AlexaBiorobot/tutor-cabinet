@@ -23,6 +23,8 @@ export default async function AdminWebinarsPage() {
       eyebrow="Live training"
       userName={profile?.full_name}
       userRole={profile?.role}
+      backHref="/admin"
+      backLabel="Admin overview"
     >
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <div className="grid gap-5">
