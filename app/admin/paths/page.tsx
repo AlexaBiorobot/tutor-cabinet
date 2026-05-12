@@ -1,6 +1,6 @@
 import { BookOpenCheck, Plus, Route, UserPlus } from "lucide-react";
 import { redirect } from "next/navigation";
-import { addTrainingPathStep, assignTrainingPath, createTrainingPath } from "@/app/actions";
+import { addTrainingPathStep, assignTrainingPath, createModuleWithQuiz, createTrainingPath } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
@@ -109,6 +109,74 @@ export default async function AdminPathsPage() {
                 <Button type="submit">
                   <Plus className="h-4 w-4" />
                   Create path
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Create module</CardTitle>
+              <CardDescription>Add self-paced content and an optional first quiz question.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={createModuleWithQuiz} className="grid gap-3">
+                <label className="grid gap-1 text-sm font-medium">
+                  Module title
+                  <input name="title" required className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Summary
+                  <textarea name="summary" className="min-h-20 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Content
+                  <textarea name="body" className="min-h-28 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Estimated minutes
+                  <input name="estimatedMinutes" type="number" min="1" defaultValue="15" className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+
+                <div className="mt-2 border-t pt-3">
+                  <h3 className="text-sm font-semibold">Optional quiz</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">Leave these blank to create content without a quiz.</p>
+                </div>
+                <label className="grid gap-1 text-sm font-medium">
+                  Quiz title
+                  <input name="quizTitle" className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Passing score
+                  <input name="passingScore" type="number" min="1" max="100" defaultValue="80" className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Question
+                  <textarea name="questionPrompt" className="min-h-20 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Option A
+                  <input name="optionA" className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Option B
+                  <input name="optionB" className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Option C
+                  <input name="optionC" className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Correct option
+                  <select name="correctOption" className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+                    <option value="0">Option A</option>
+                    <option value="1">Option B</option>
+                    <option value="2">Option C</option>
+                  </select>
+                </label>
+                <Button type="submit" variant="outline">
+                  <Plus className="h-4 w-4" />
+                  Create module
                 </Button>
               </form>
             </CardContent>
