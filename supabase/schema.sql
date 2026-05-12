@@ -56,6 +56,9 @@ create table modules (
   title text not null,
   summary text not null default '',
   body text not null default '',
+  video_url text,
+  image_url text,
+  resource_links text[] not null default '{}',
   estimated_minutes integer not null default 15,
   created_by uuid references profiles(id),
   created_at timestamptz not null default now()
