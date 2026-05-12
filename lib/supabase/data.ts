@@ -55,8 +55,17 @@ type DbRegistration = {
 };
 
 type DbProfile = {
+  id?: string;
   full_name: string;
   email: string;
+  role?: "tutor" | "admin";
+};
+
+type DbAssignment = {
+  tutor_id: string;
+  training_path_id: string;
+  profiles?: DbProfile | DbProfile[] | null;
+  training_paths?: DbPath | DbPath[] | null;
 };
 
 export async function getSessionProfile() {
@@ -143,15 +152,20 @@ export async function getAdminDashboardData() {
   ]);
 
   return {
-    rows: (assignmentRows ?? []).map((row: any) => ({
-      tutor: {
-        id: row.profiles?.id ?? row.tutor_id,
-        name: row.profiles?.full_name ?? "Tutor",
-        email: row.profiles?.email ?? "",
-        role: "tutor"
-      } satisfies Tutor,
-      path: mapPath(row.training_paths)
-    })),
+    rows: ((assignmentRows ?? []) as DbAssignment[]).map((row) => {
+      const profile = firstOrSelf(row.profiles);
+      const path = firstOrSelf(row.training_paths);
+
+      return {
+        tutor: {
+          id: profile?.id ?? row.tutor_id,
+          name: profile?.full_name ?? "Tutor",
+          email: profile?.email ?? "",
+          role: "tutor"
+        } satisfies Tutor,
+        path: mapPath(path ?? null)
+      };
+    }),
     modules: ((moduleRows ?? []) as DbModule[]).map(mapModule),
     moduleProgress: ((progressRows ?? []) as { tutor_id: string; module_id: string; status: LearningStatus }[]).map(
       (row) => ({
@@ -161,6 +175,48 @@ export async function getAdminDashboardData() {
       })
     ),
     webinarRegistrations: ((registrationRows ?? []) as DbRegistration[]).map(mapRegistration)
+  };
+}
+
+export async function getAdminPathData() {
+  const supabase = await createClient();
+  const [{ data: pathRows }, { data: moduleRows }, { data: webinarRows }, { data: tutorRows }, { data: assignmentRows }] =
+    await Promise.all([
+      supabase
+        .from("training_paths")
+        .select("id, title, description, training_path_steps(id, step_type, module_id, webinar_id, is_required, position)")
+        .order("created_at", { ascending: false }),
+      supabase.from("modules").select("id, title, summary, estimated_minutes, quizzes(id)").order("title"),
+      supabase.from("webinars").select("id, title, description, trainer, starts_at, duration_minutes, capacity, meeting_link").order("starts_at"),
+      supabase.from("profiles").select("id, full_name, email, role").eq("role", "tutor").order("full_name"),
+      supabase
+        .from("path_assignments")
+        .select("tutor_id, training_path_id, profiles!path_assignments_tutor_id_fkey(id, full_name, email)")
+    ]);
+
+  return {
+    paths: ((pathRows ?? []) as DbPath[]).map(mapPath).filter(Boolean) as TrainingPath[],
+    modules: ((moduleRows ?? []) as DbModule[]).map(mapModule),
+    webinars: ((webinarRows ?? []) as DbWebinar[]).map(mapWebinar),
+    tutors: ((tutorRows ?? []) as (DbProfile & { id: string })[]).map(
+      (row) =>
+        ({
+          id: row.id,
+          name: row.full_name,
+          email: row.email,
+          role: "tutor"
+        }) satisfies Tutor
+    ),
+    assignments: ((assignmentRows ?? []) as DbAssignment[]).map((row) => {
+      const profile = firstOrSelf(row.profiles);
+
+      return {
+        tutorId: row.tutor_id,
+        pathId: row.training_path_id,
+        tutorName: profile?.full_name ?? "Tutor",
+        tutorEmail: profile?.email ?? ""
+      };
+    })
   };
 }
 
@@ -239,4 +295,9 @@ function mapRegistration(row: DbRegistration): WebinarRegistration & {
     tutorName: profile?.full_name,
     tutorEmail: profile?.email
   };
+}
+
+function firstOrSelf<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] ?? null : value;
 }
