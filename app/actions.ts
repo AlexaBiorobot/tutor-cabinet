@@ -114,6 +114,79 @@ export async function createTrainingPath(formData: FormData) {
   revalidatePath("/admin/paths");
 }
 
+export async function createModuleWithQuiz(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim();
+  const summary = String(formData.get("summary") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  const estimatedMinutes = Number(formData.get("estimatedMinutes") ?? 15);
+  const quizTitle = String(formData.get("quizTitle") ?? "").trim();
+  const questionPrompt = String(formData.get("questionPrompt") ?? "").trim();
+  const optionA = String(formData.get("optionA") ?? "").trim();
+  const optionB = String(formData.get("optionB") ?? "").trim();
+  const optionC = String(formData.get("optionC") ?? "").trim();
+  const correctOption = String(formData.get("correctOption") ?? "0");
+  const passingScore = Number(formData.get("passingScore") ?? 80);
+  const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+  if (!title) return;
+
+  const { data: module } = await supabase
+    .from("modules")
+    .insert({
+      title,
+      summary,
+      body,
+      estimated_minutes: estimatedMinutes,
+      created_by: user.id
+    })
+    .select("id")
+    .single();
+
+  if (module?.id && quizTitle && questionPrompt && optionA && optionB) {
+    const { data: quiz } = await supabase
+      .from("quizzes")
+      .insert({
+        module_id: module.id,
+        title: quizTitle,
+        passing_score: passingScore
+      })
+      .select("id")
+      .single();
+
+    if (quiz?.id) {
+      const { data: question } = await supabase
+        .from("quiz_questions")
+        .insert({
+          quiz_id: quiz.id,
+          prompt: questionPrompt,
+          position: 1
+        })
+        .select("id")
+        .single();
+
+      if (question?.id) {
+        const options = [optionA, optionB, optionC].filter(Boolean);
+        await supabase.from("quiz_options").insert(
+          options.map((label, index) => ({
+            question_id: question.id,
+            label,
+            is_correct: String(index) === correctOption,
+            position: index + 1
+          }))
+        );
+      }
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/paths");
+  revalidatePath("/tutor");
+}
+
 export async function assignTrainingPath(formData: FormData) {
   const tutorId = String(formData.get("tutorId") ?? "");
   const pathId = String(formData.get("pathId") ?? "");
