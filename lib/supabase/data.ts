@@ -51,7 +51,12 @@ type DbRegistration = {
   tutor_id: string;
   webinar_id: string;
   status: WebinarRegistration["status"];
-  profiles?: { full_name: string; email: string } | null;
+  profiles?: DbProfile | DbProfile[] | null;
+};
+
+type DbProfile = {
+  full_name: string;
+  email: string;
 };
 
 export async function getSessionProfile() {
@@ -224,12 +229,14 @@ function mapRegistration(row: DbRegistration): WebinarRegistration & {
   tutorName?: string;
   tutorEmail?: string;
 } {
+  const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+
   return {
     id: row.id,
     tutorId: row.tutor_id,
     webinarId: row.webinar_id,
     status: row.status,
-    tutorName: row.profiles?.full_name,
-    tutorEmail: row.profiles?.email
+    tutorName: profile?.full_name,
+    tutorEmail: profile?.email
   };
 }
