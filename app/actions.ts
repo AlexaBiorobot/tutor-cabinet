@@ -47,6 +47,31 @@ export async function registerForWebinar(formData: FormData) {
   revalidatePath("/tutor");
 }
 
+export async function completeModule(formData: FormData) {
+  const moduleId = String(formData.get("moduleId") ?? "");
+  const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+  if (!moduleId) return;
+
+  await supabase.from("module_progress").upsert(
+    {
+      tutor_id: user.id,
+      module_id: moduleId,
+      status: "passed",
+      completed_at: new Date().toISOString()
+    },
+    { onConflict: "tutor_id,module_id" }
+  );
+
+  revalidatePath("/tutor");
+  revalidatePath(`/tutor/modules/${moduleId}`);
+  redirect("/tutor");
+}
+
 export async function markAttendance(formData: FormData) {
   const registrationId = String(formData.get("registrationId") ?? "");
   const status = String(formData.get("status") ?? "");
