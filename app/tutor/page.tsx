@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { CalendarDays, CheckCircle2, ExternalLink, FileText, PlayCircle, Video } from "lucide-react";
 import { registerForWebinar } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
@@ -135,9 +136,11 @@ export default async function TutorDashboard() {
                             <div className="flex flex-wrap items-center gap-2 md:justify-end">
                               <StatusPill status={status} />
                               {step.type === "module" ? (
-                                <Button size="sm" variant={status === "passed" ? "secondary" : "default"}>
-                                  {status === "passed" ? <CheckCircle2 className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
-                                  {status === "passed" ? "Review" : "Continue"}
+                                <Button asChild size="sm" variant={status === "passed" ? "secondary" : "default"}>
+                                  <Link href={`/tutor/modules/${module?.id}`}>
+                                    {status === "passed" ? <CheckCircle2 className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+                                    {status === "passed" ? "Review" : "Continue"}
+                                  </Link>
                                 </Button>
                               ) : registration ? (
                                 <Button asChild size="sm">
