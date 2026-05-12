@@ -1,23 +1,30 @@
 import { BookOpenCheck, Plus, Route, UserPlus } from "lucide-react";
 import { redirect } from "next/navigation";
+import { addTrainingPathStep, assignTrainingPath, createTrainingPath } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { modules, pathAssignments, trainingPaths, tutors, webinars } from "@/lib/mock-data";
-import { getSessionProfile } from "@/lib/supabase/data";
+import { getAdminPathData, getSessionProfile } from "@/lib/supabase/data";
 
 export default async function AdminPathsPage() {
   const { user, profile } = await getSessionProfile();
   if (!user) redirect("/login");
   if (profile?.role !== "admin") redirect("/tutor");
 
+  const { paths: trainingPaths, modules, webinars, tutors, assignments } = await getAdminPathData();
+
   return (
-    <AppShell title="Training paths and content" eyebrow="Curriculum builder">
+    <AppShell
+      title="Training paths and content"
+      eyebrow="Curriculum builder"
+      userName={profile?.full_name}
+      userRole={profile?.role}
+    >
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <div className="grid gap-5">
           {trainingPaths.map((path) => {
-            const assignments = pathAssignments.filter((item) => item.pathId === path.id);
+            const pathAssignments = assignments.filter((item) => item.pathId === path.id);
             return (
               <Card key={path.id}>
                 <CardHeader className="flex-row items-start justify-between gap-4">
@@ -59,20 +66,28 @@ export default async function AdminPathsPage() {
                   <div>
                     <h3 className="mb-2 text-sm font-semibold">Assigned tutors</h3>
                     <div className="flex flex-wrap gap-2">
-                      {assignments.map((assignment) => {
-                        const tutor = tutors.find((item) => item.id === assignment.tutorId);
-                        return tutor ? (
-                          <span key={tutor.id} className="rounded-md bg-muted px-2.5 py-1 text-xs font-semibold">
-                            {tutor.name}
-                          </span>
-                        ) : null;
-                      })}
+                      {pathAssignments.length === 0 ? (
+                        <span className="text-sm text-muted-foreground">No tutors assigned yet</span>
+                      ) : null}
+                      {pathAssignments.map((assignment) => (
+                        <span key={assignment.tutorId} className="rounded-md bg-muted px-2.5 py-1 text-xs font-semibold">
+                          {assignment.tutorName}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             );
           })}
+          {trainingPaths.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>No training paths yet</CardTitle>
+                <CardDescription>Create the first path using the form on the right.</CardDescription>
+              </CardHeader>
+            </Card>
+          ) : null}
         </div>
 
         <div className="grid gap-5 content-start">
@@ -82,16 +97,16 @@ export default async function AdminPathsPage() {
               <CardDescription>Build ordered module and webinar requirements.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="grid gap-3">
+              <form action={createTrainingPath} className="grid gap-3">
                 <label className="grid gap-1 text-sm font-medium">
                   Title
-                  <input className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                  <input name="title" required className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
                 </label>
                 <label className="grid gap-1 text-sm font-medium">
                   Description
-                  <textarea className="min-h-24 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                  <textarea name="description" className="min-h-24 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
                 </label>
-                <Button type="button">
+                <Button type="submit">
                   <Plus className="h-4 w-4" />
                   Create path
                 </Button>
@@ -105,20 +120,53 @@ export default async function AdminPathsPage() {
               <CardDescription>Connect tutors to training paths.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="grid gap-3">
-                <select className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+              <form action={assignTrainingPath} className="grid gap-3">
+                <select name="tutorId" required className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
                   {tutors.map((tutor) => (
-                    <option key={tutor.id}>{tutor.name}</option>
+                    <option key={tutor.id} value={tutor.id}>{tutor.name}</option>
                   ))}
                 </select>
-                <select className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <select name="pathId" required className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
                   {trainingPaths.map((path) => (
-                    <option key={path.id}>{path.title}</option>
+                    <option key={path.id} value={path.id}>{path.title}</option>
                   ))}
                 </select>
-                <Button type="button" variant="secondary">
+                <Button type="submit" variant="secondary" disabled={tutors.length === 0 || trainingPaths.length === 0}>
                   <UserPlus className="h-4 w-4" />
                   Assign tutor
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Add path step</CardTitle>
+              <CardDescription>Add a module or required webinar to a path.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={addTrainingPathStep} className="grid gap-3">
+                <select name="pathId" required className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+                  {trainingPaths.map((path) => (
+                    <option key={path.id} value={path.id}>{path.title}</option>
+                  ))}
+                </select>
+                <select name="stepTarget" required className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">Choose module or webinar</option>
+                  {modules.map((module) => (
+                    <option key={module.id} value={`module:${module.id}`}>Module - {module.title}</option>
+                  ))}
+                  {webinars.map((webinar) => (
+                    <option key={webinar.id} value={`webinar:${webinar.id}`}>Webinar - {webinar.title}</option>
+                  ))}
+                </select>
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input name="required" type="checkbox" defaultChecked className="h-4 w-4" />
+                  Required step
+                </label>
+                <Button type="submit" variant="outline" disabled={trainingPaths.length === 0}>
+                  <Plus className="h-4 w-4" />
+                  Add step
                 </Button>
               </form>
             </CardContent>
