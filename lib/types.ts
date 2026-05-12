@@ -33,7 +33,11 @@ export type Module = {
   id: string;
   title: string;
   summary: string;
+  body?: string;
   estimatedMinutes: number;
+  videoUrl?: string;
+  imageUrl?: string;
+  resourceLinks: string[];
   quizId?: string;
 };
 
