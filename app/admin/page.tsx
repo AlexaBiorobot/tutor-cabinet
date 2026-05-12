@@ -33,7 +33,12 @@ export default async function AdminDashboard() {
     rows.length === 0 ? 0 : Math.round(rows.reduce((sum, row) => sum + (row?.readiness.percent ?? 0), 0) / rows.length);
 
   return (
-    <AppShell title="Admin readiness overview" eyebrow="Admin workspace">
+    <AppShell
+      title="Admin readiness overview"
+      eyebrow="Admin workspace"
+      userName={profile?.full_name}
+      userRole={profile?.role}
+    >
       <section className="grid gap-5 md:grid-cols-3">
         <Card>
           <CardHeader>
