@@ -1,8 +1,9 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
 import { signIn } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSessionProfile } from "@/lib/supabase/data";
 
 export default async function LoginPage({
   searchParams
@@ -10,6 +11,9 @@ export default async function LoginPage({
   searchParams?: Promise<{ error?: string }>;
 }) {
   const params = await searchParams;
+  const { user, profile } = await getSessionProfile();
+
+  if (user) redirect(profile?.role === "admin" ? "/admin" : "/tutor");
 
   return (
     <main className="grid min-h-screen place-items-center px-5">
@@ -50,10 +54,6 @@ export default async function LoginPage({
             </label>
             <Button type="submit" className="mt-2">Sign in</Button>
           </form>
-          <div className="mt-4 flex justify-between text-sm">
-            <Link href="/tutor" className="text-primary hover:underline">Tutor preview</Link>
-            <Link href="/admin" className="text-primary hover:underline">Admin preview</Link>
-          </div>
         </CardContent>
       </Card>
     </main>
