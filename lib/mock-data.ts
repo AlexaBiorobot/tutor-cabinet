@@ -31,6 +31,9 @@ export const modules: Module[] = [
     title: "Tutoring Foundations",
     summary: "Core expectations, session structure, and student support principles.",
     estimatedMinutes: 35,
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    imageUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
+    resourceLinks: ["https://example.com/foundations-guide"],
     quizId: "quiz-1"
   },
   {
@@ -38,13 +41,15 @@ export const modules: Module[] = [
     title: "Safety and Escalation",
     summary: "How to document concerns and escalate support needs.",
     estimatedMinutes: 25,
+    resourceLinks: [],
     quizId: "quiz-2"
   },
   {
     id: "module-3",
     title: "Assessment Readiness",
     summary: "Using formative checks to personalize learning plans.",
-    estimatedMinutes: 30
+    estimatedMinutes: 30,
+    resourceLinks: []
   }
 ];
 
