@@ -18,7 +18,12 @@ export default async function AdminWebinarsPage() {
   const { webinars, registrations: webinarRegistrations } = await getAdminWebinarData();
 
   return (
-    <AppShell title="Webinar management" eyebrow="Live training">
+    <AppShell
+      title="Webinar management"
+      eyebrow="Live training"
+      userName={profile?.full_name}
+      userRole={profile?.role}
+    >
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <div className="grid gap-5">
           {webinars.map((webinar) => {
