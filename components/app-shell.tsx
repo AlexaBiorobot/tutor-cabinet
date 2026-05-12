@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { BookOpenCheck, CalendarDays, GraduationCap, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { BookOpenCheck, CalendarDays, GraduationCap, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { signOut } from "@/app/actions";
+import { Button } from "@/components/ui/button";
 
 const nav = [
   { href: "/tutor", label: "Tutor", icon: GraduationCap },
@@ -8,7 +10,19 @@ const nav = [
   { href: "/admin/paths", label: "Paths", icon: BookOpenCheck }
 ];
 
-export function AppShell({ children, title, eyebrow }: { children: React.ReactNode; title: string; eyebrow: string }) {
+export function AppShell({
+  children,
+  title,
+  eyebrow,
+  userName,
+  userRole
+}: {
+  children: React.ReactNode;
+  title: string;
+  eyebrow: string;
+  userName?: string;
+  userRole?: string;
+}) {
   return (
     <div className="min-h-screen">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r bg-card p-5 lg:block">
@@ -30,6 +44,18 @@ export function AppShell({ children, title, eyebrow }: { children: React.ReactNo
             </Link>
           ))}
         </nav>
+        {userName ? (
+          <div className="absolute bottom-5 left-5 right-5 rounded-md border bg-background p-3">
+            <p className="text-sm font-medium">{userName}</p>
+            <p className="text-xs capitalize text-muted-foreground">{userRole}</p>
+            <form action={signOut} className="mt-3">
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </Button>
+            </form>
+          </div>
+        ) : null}
       </aside>
       <main className="lg:pl-64">
         <header className="border-b bg-card">
