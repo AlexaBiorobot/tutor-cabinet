@@ -118,6 +118,12 @@ export async function createModuleWithQuiz(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
+  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
+  const imageUrl = String(formData.get("imageUrl") ?? "").trim();
+  const resourceLinks = String(formData.get("resourceLinks") ?? "")
+    .split(/\r?\n/)
+    .map((link) => link.trim())
+    .filter(Boolean);
   const estimatedMinutes = Number(formData.get("estimatedMinutes") ?? 15);
   const quizTitle = String(formData.get("quizTitle") ?? "").trim();
   const questionPrompt = String(formData.get("questionPrompt") ?? "").trim();
@@ -140,6 +146,9 @@ export async function createModuleWithQuiz(formData: FormData) {
       title,
       summary,
       body,
+      video_url: videoUrl || null,
+      image_url: imageUrl || null,
+      resource_links: resourceLinks,
       estimated_minutes: estimatedMinutes,
       created_by: user.id
     })
