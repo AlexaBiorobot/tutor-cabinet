@@ -1,4 +1,4 @@
-import { BookOpenCheck, Plus, Route, UserPlus } from "lucide-react";
+import { BookOpenCheck, FileText, ImageIcon, Plus, Route, UserPlus, Video } from "lucide-react";
 import { redirect } from "next/navigation";
 import { addTrainingPathStep, assignTrainingPath, createModuleWithQuiz, createTrainingPath } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
@@ -58,6 +58,28 @@ export default async function AdminPathsPage() {
                                 <p className="text-sm text-muted-foreground">
                                   Step {step.order} - {step.type} - {step.required ? "Required" : "Optional"}
                                 </p>
+                                {module ? (
+                                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                    {module.videoUrl ? (
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1">
+                                        <Video className="h-3 w-3" />
+                                        Video
+                                      </span>
+                                    ) : null}
+                                    {module.imageUrl ? (
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1">
+                                        <ImageIcon className="h-3 w-3" />
+                                        Image
+                                      </span>
+                                    ) : null}
+                                    {module.resourceLinks.length > 0 ? (
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1">
+                                        <FileText className="h-3 w-3" />
+                                        {module.resourceLinks.length} material{module.resourceLinks.length === 1 ? "" : "s"}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
                             <Button size="sm" variant="outline">Edit</Button>
@@ -134,6 +156,32 @@ export default async function AdminPathsPage() {
                 <label className="grid gap-1 text-sm font-medium">
                   Content
                   <textarea name="body" className="min-h-28 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Video URL
+                  <input
+                    name="videoUrl"
+                    type="url"
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Image URL
+                  <input
+                    name="imageUrl"
+                    type="url"
+                    placeholder="https://..."
+                    className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  Materials
+                  <textarea
+                    name="resourceLinks"
+                    placeholder="One link per line"
+                    className="min-h-24 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
                 </label>
                 <label className="grid gap-1 text-sm font-medium">
                   Estimated minutes
