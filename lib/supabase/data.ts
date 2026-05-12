@@ -31,7 +31,11 @@ type DbModule = {
   id: string;
   title: string;
   summary: string;
+  body?: string;
   estimated_minutes: number;
+  video_url?: string | null;
+  image_url?: string | null;
+  resource_links?: string[] | null;
   quizzes?: { id: string }[];
 };
 
@@ -101,7 +105,7 @@ export async function getTutorDashboardData(tutorId: string) {
         "tutor_id, training_path_id, training_paths(id, title, description, training_path_steps(id, step_type, module_id, webinar_id, is_required, position))"
       )
       .eq("tutor_id", tutorId),
-    supabase.from("modules").select("id, title, summary, estimated_minutes, quizzes(id)"),
+    supabase.from("modules").select("id, title, summary, body, estimated_minutes, video_url, image_url, resource_links, quizzes(id)"),
     supabase.from("module_progress").select("tutor_id, module_id, status").eq("tutor_id", tutorId),
     supabase.from("webinars").select("id, title, description, trainer, starts_at, duration_minutes, capacity, meeting_link"),
     supabase.from("webinar_registrations").select("id, tutor_id, webinar_id, status").eq("tutor_id", tutorId)
@@ -146,7 +150,7 @@ export async function getAdminDashboardData() {
       .select(
         "tutor_id, training_path_id, profiles!path_assignments_tutor_id_fkey(id, full_name, email), training_paths(id, title, description, training_path_steps(id, step_type, module_id, webinar_id, is_required, position))"
       ),
-    supabase.from("modules").select("id, title, summary, estimated_minutes, quizzes(id)"),
+    supabase.from("modules").select("id, title, summary, body, estimated_minutes, video_url, image_url, resource_links, quizzes(id)"),
     supabase.from("module_progress").select("tutor_id, module_id, status"),
     supabase.from("webinar_registrations").select("id, tutor_id, webinar_id, status")
   ]);
@@ -186,7 +190,7 @@ export async function getAdminPathData() {
         .from("training_paths")
         .select("id, title, description, training_path_steps(id, step_type, module_id, webinar_id, is_required, position)")
         .order("created_at", { ascending: false }),
-      supabase.from("modules").select("id, title, summary, estimated_minutes, quizzes(id)").order("title"),
+      supabase.from("modules").select("id, title, summary, body, estimated_minutes, video_url, image_url, resource_links, quizzes(id)").order("title"),
       supabase.from("webinars").select("id, title, description, trainer, starts_at, duration_minutes, capacity, meeting_link").order("starts_at"),
       supabase.from("profiles").select("id, full_name, email, role").eq("role", "tutor").order("full_name"),
       supabase
@@ -262,7 +266,11 @@ function mapModule(row: DbModule): Module {
     id: row.id,
     title: row.title,
     summary: row.summary,
+    body: row.body,
     estimatedMinutes: row.estimated_minutes,
+    videoUrl: row.video_url ?? undefined,
+    imageUrl: row.image_url ?? undefined,
+    resourceLinks: row.resource_links ?? [],
     quizId: row.quizzes?.[0]?.id
   };
 }
