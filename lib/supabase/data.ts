@@ -136,6 +136,34 @@ export async function getTutorDashboardData(tutorId: string) {
   };
 }
 
+export async function getTutorModuleData(tutorId: string, moduleId: string) {
+  const supabase = await createClient();
+  const [{ data: moduleRow }, { data: progressRow }] = await Promise.all([
+    supabase
+      .from("modules")
+      .select("id, title, summary, body, estimated_minutes, video_url, image_url, resource_links, quizzes(id)")
+      .eq("id", moduleId)
+      .maybeSingle(),
+    supabase
+      .from("module_progress")
+      .select("tutor_id, module_id, status")
+      .eq("tutor_id", tutorId)
+      .eq("module_id", moduleId)
+      .maybeSingle()
+  ]);
+
+  return {
+    module: moduleRow ? mapModule(moduleRow as DbModule) : null,
+    progress: progressRow
+      ? {
+          tutorId: progressRow.tutor_id,
+          moduleId: progressRow.module_id,
+          status: progressRow.status as ModuleProgress["status"]
+        }
+      : null
+  };
+}
+
 export async function getAdminDashboardData() {
   const supabase = await createClient();
 
