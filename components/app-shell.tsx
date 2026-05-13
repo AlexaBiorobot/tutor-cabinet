@@ -1,13 +1,42 @@
 import Link from "next/link";
-import { ArrowLeft, BookOpenCheck, CalendarDays, GraduationCap, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  BookOpenCheck,
+  ClipboardList,
+  GraduationCap,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  ShieldCheck,
+  Users,
+  UserSquare2
+} from "lucide-react";
 import { signOut } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 
-const nav = [
-  { href: "/tutor", label: "Tutor", icon: GraduationCap },
-  { href: "/admin", label: "Admin", icon: ShieldCheck },
-  { href: "/admin/webinars", label: "Webinars", icon: CalendarDays },
-  { href: "/admin/paths", label: "Paths", icon: BookOpenCheck }
+const adminNav = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/people", label: "People", icon: UserSquare2 },
+  { href: "/admin/groups", label: "Groups", icon: Users },
+  { href: "/admin/modules", label: "Modules", icon: BookOpenCheck },
+  { href: "/admin/assignments", label: "Assignments", icon: ClipboardList },
+  { href: "/admin/reviews", label: "Reviews", icon: ShieldCheck },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/settings", label: "Settings", icon: Settings }
+];
+
+const tutorNav = [
+  { href: "/tutor", label: "My Modules", icon: GraduationCap },
+  { href: "/tutor/progress", label: "My Progress", icon: BarChart3 },
+  { href: "/tutor/results", label: "Results", icon: ClipboardList }
+];
+
+const trainerNav = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/modules", label: "Modules", icon: BookOpenCheck },
+  { href: "/admin/reviews", label: "Reviews", icon: ShieldCheck },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 }
 ];
 
 export function AppShell({
@@ -27,6 +56,8 @@ export function AppShell({
   backHref?: string;
   backLabel?: string;
 }) {
+  const nav = userRole === "admin" ? adminNav : userRole === "trainer" ? trainerNav : tutorNav;
+
   return (
     <div className="min-h-screen">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r bg-card p-5 lg:block">
@@ -34,7 +65,7 @@ export function AppShell({
           <span className="grid h-10 w-10 place-items-center rounded-md bg-primary text-primary-foreground">
             <LayoutDashboard className="h-5 w-5" />
           </span>
-          Tutor Readiness
+          Tutor Development
         </Link>
         <nav className="mt-8 grid gap-1">
           {nav.map((item) => (
