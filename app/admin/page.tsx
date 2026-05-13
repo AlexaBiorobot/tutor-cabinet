@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BarChart3, CalendarCheck, Plus, UserPlus } from "lucide-react";
+import { BookOpenCheck, ClipboardList, UserPlus } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ProgressRing } from "@/components/progress-ring";
 import { StatusPill } from "@/components/status-pill";
@@ -42,8 +42,8 @@ export default async function AdminDashboard() {
       <section className="grid gap-5 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Assigned paths</CardTitle>
-            <CardDescription>Active tutor assignments</CardDescription>
+            <CardTitle>Legacy assignments</CardTitle>
+            <CardDescription>Current path-based records</CardDescription>
           </CardHeader>
           <CardContent className="text-3xl font-semibold">{rows.length}</CardContent>
         </Card>
@@ -57,7 +57,7 @@ export default async function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Needs revision</CardTitle>
-            <CardDescription>Blocked by quiz or attendance</CardDescription>
+            <CardDescription>Blocked by quiz or review status</CardDescription>
           </CardHeader>
           <CardContent className="text-3xl font-semibold">{revisionCount}</CardContent>
         </Card>
@@ -68,12 +68,12 @@ export default async function AdminDashboard() {
           <CardHeader className="flex-row items-center justify-between gap-4">
             <div>
               <CardTitle>Progress by tutor</CardTitle>
-              <CardDescription>Readiness is computed from required modules, quizzes, and webinars.</CardDescription>
+              <CardDescription>Legacy path progress while the module assignment model is being migrated.</CardDescription>
             </div>
             <Button asChild>
-              <Link href="/admin/paths">
-                <Plus className="h-4 w-4" />
-                New path
+              <Link href="/admin/modules">
+                <BookOpenCheck className="h-4 w-4" />
+                Modules
               </Link>
             </Button>
           </CardHeader>
@@ -116,24 +116,26 @@ export default async function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Admin actions</CardTitle>
-              <CardDescription>Create content and manage live training.</CardDescription>
+              <CardDescription>Core Tutor Development Hub workflows.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
               <Button asChild variant="outline" className="justify-start">
-                <Link href="/admin/paths">
-                  <BarChart3 className="h-4 w-4" />
-                  Manage paths
+                <Link href="/admin/people">
+                  <UserPlus className="h-4 w-4" />
+                  Manage people
                 </Link>
               </Button>
               <Button asChild variant="outline" className="justify-start">
-                <Link href="/admin/webinars">
-                  <CalendarCheck className="h-4 w-4" />
-                  Mark attendance
+                <Link href="/admin/modules">
+                  <BookOpenCheck className="h-4 w-4" />
+                  Build modules
                 </Link>
               </Button>
-              <Button variant="outline" className="justify-start">
-                <UserPlus className="h-4 w-4" />
-                Assign tutors
+              <Button asChild variant="outline" className="justify-start">
+                <Link href="/admin/assignments">
+                  <ClipboardList className="h-4 w-4" />
+                  Assign modules
+                </Link>
               </Button>
             </CardContent>
           </Card>
